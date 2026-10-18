@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Reader — Phase 1 Screen Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f5f5f5; --card:#ffffff; --ink:#2d3142; --muted:#4f5d75;
+    --soft:#7a8399; --rule:rgba(45,49,66,0.12); --accent:#eb6c36;
+    --accent-tint:#fdece4; --link:#2e5aa8; --chip:#eef0f3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Geist',sans-serif; line-height:1.5;
+  }
+  header.page{
+    max-width:1200px; margin:0 auto; padding:2.5rem 2rem 1rem;
+  }
+  .eyebrow{
+    font-family:'Geist Mono',monospace; font-size:11px; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--muted); margin:0 0 .5rem;
+  }
+  h1{font-family:'Instrument Serif',serif; font-weight:400; font-size:2.4rem; margin:0 0 .5rem;}
+  .lede{color:var(--muted); max-width:62ch; margin:0;}
+  .flow{
+    max-width:1200px; margin:1rem auto 0; padding:0 2rem 3rem;
+  }
+  .flow-note{
+    font-family:'Geist Mono',monospace; font-size:11px; color:var(--soft);
+    letter-spacing:.04em; margin:1.5rem 0 .5rem;
+  }
+  .grid{
+    display:flex; flex-wrap:wrap; gap:2rem; align-items:flex-start;
+  }
+  /* phone frame */
+  .phone{
+    width:248px; background:var(--card); border:1px solid var(--rule);
+    border-radius:22px; padding:8px; flex:0 0 auto;
+  }
+  .screen{
+    position:relative; height:496px; border-radius:15px; overflow:hidden;
+    background:var(--paper); border:1px solid var(--rule); display:flex; flex-direction:column;
+  }
+  .caption{
+    margin:.65rem 2px 0; font-size:12px;
+  }
+  .caption b{font-weight:600;}
+  .caption .n{
+    font-family:'Geist Mono',monospace; font-size:10px; color:var(--accent);
+    border:1px solid var(--accent); border-radius:4px; padding:0 4px; margin-right:6px;
+  }
+  .caption .sub{display:block; color:var(--soft); font-size:11px; margin-top:2px;}
+  /* status bar */
+  .status{
+    height:20px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 10px; font-family:'Geist Mono',monospace; font-size:8px; color:var(--soft);
+    flex:0 0 auto;
+  }
+  /* app bar */
+  .appbar{
+    height:44px; flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    padding:0 10px; background:var(--card); border-bottom:1px solid var(--rule);
+  }
+  .appbar .back{font-size:16px; color:var(--ink); width:18px;}
+  .appbar .title{font-size:13px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .appbar .act{font-family:'Geist Mono',monospace; font-size:9px; color:var(--muted); border:1px solid var(--rule); border-radius:4px; padding:2px 5px;}
+  .crumb{
+    font-family:'Geist Mono',monospace; font-size:9px; color:var(--soft);
+    padding:5px 10px; background:var(--card); border-bottom:1px solid var(--rule); flex:0 0 auto;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .body{flex:1 1 auto; overflow:hidden; padding:0;}
+  /* list rows */
+  .row{display:flex; align-items:center; gap:9px; padding:9px 11px; border-bottom:1px solid var(--rule); background:var(--card);}
+  .row .ic{width:18px; text-align:center; font-size:13px;}
+  .row .nm{font-size:12px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .row .mt{font-family:'Geist Mono',monospace; font-size:8px; color:var(--soft);}
+  .folder .nm{font-weight:600;}
+  .dim{color:var(--soft);}
+  /* centered prompt */
+  .prompt{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:28px 22px; gap:14px;
+  }
+  .prompt .glyph{font-size:40px;}
+  .prompt h3{margin:0; font-size:15px; font-weight:600;}
+  .prompt p{margin:0; font-size:11.5px; color:var(--muted);}
+  .btn{
+    font-size:12px; font-weight:600; color:#fff; background:var(--accent);
+    border:none; border-radius:8px; padding:9px 18px; margin-top:4px;
+  }
+  .btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--rule);}
+  /* viewer content samples */
+  .mono{font-family:'Geist Mono',monospace; font-size:9px; line-height:1.7; color:var(--ink); padding:10px 11px; white-space:pre; overflow:hidden;}
+  .mono .k{color:var(--link);} .mono .s{color:#2e7d32;} .mono .c{color:var(--soft);}
+  .md{padding:12px 12px; font-size:11px;}
+  .md h2{font-family:'Instrument Serif',serif; font-weight:400; font-size:18px; margin:0 0 6px;}
+  .md h3{font-size:12px; margin:10px 0 4px;}
+  .md p{margin:0 0 7px; color:var(--ink);}
+  .md code{font-family:'Geist Mono',monospace; font-size:9px; background:var(--chip); padding:1px 4px; border-radius:3px;}
+  .md ul{margin:0 0 7px; padding-left:16px;} .md li{margin:2px 0;}
+  /* table */
+  table.csv{width:100%; border-collapse:collapse; font-size:9px;}
+  table.csv th,table.csv td{border:1px solid var(--rule); padding:4px 6px; text-align:left; white-space:nowrap;}
+  table.csv th{background:var(--chip); font-family:'Geist Mono',monospace; font-weight:600; font-size:8px; letter-spacing:.04em;}
+  /* toggle pill in appbar */
+  .seg{display:flex; border:1px solid var(--rule); border-radius:6px; overflow:hidden; font-family:'Geist Mono',monospace; font-size:8px;}
+  .seg span{padding:3px 7px; color:var(--muted);}
+  .seg span.on{background:var(--ink); color:#fff;}
+  /* modal overlay */
+  .overlay{position:absolute; inset:0; background:rgba(45,49,66,0.45); display:flex; align-items:flex-end;}
+  .sheet{background:var(--card); width:100%; border-radius:16px 16px 0 0; padding:18px 18px 22px; display:flex; flex-direction:column; gap:10px;}
+  .sheet .grip{width:34px; height:4px; border-radius:2px; background:var(--rule); align-self:center; margin-bottom:4px;}
+  .sheet h3{margin:0; font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px;}
+  .sheet .ext{font-family:'Geist Mono',monospace; font-size:9px; color:var(--accent); border:1px solid var(--accent); border-radius:4px; padding:1px 5px;}
+  .sheet p{margin:0; font-size:11.5px; color:var(--muted);}
+  /* html render sample */
+  .htmlr{padding:12px; font-size:11px;}
+  .htmlr h2{font-size:15px; margin:0 0 6px;}
+  .htmlr a{color:var(--link); text-decoration:underline;}
+  .htmlr .box{border:1px solid var(--rule); border-radius:6px; padding:8px; margin-top:8px; background:var(--card); font-size:10px; color:var(--muted);}
+  footer.page{max-width:1200px; margin:0 auto; padding:1.5rem 2rem 3rem; border-top:1px solid var(--rule); color:var(--soft); font-family:'Geist Mono',monospace; font-size:10px;}
+  .legend{display:flex; gap:20px; flex-wrap:wrap; margin-top:.5rem;}
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .dot{width:8px; height:8px; border-radius:50%;}
+</style>
+</head>
+<body>
+<header class="page">
+  <p class="eyebrow">File Reader · Android · Phase 1</p>
+  <h1>Screen Inventory</h1>
+  <p class="lede">Every screen Phase 1 ships. The explorer is the home surface; opening a supported
+  file pushes a viewer you back out of; an unsupported file shows a modal and keeps you in the
+  explorer. Five viewers share one scaffold (app bar + back + content). These are static mockups to
+  agree on scope — not final visual design.</p>
+</header>
+
+<div class="flow">
+
+  <p class="flow-note">// ENTRY &amp; EXPLORER — 4 screens</p>
+  <div class="grid">
+
+    <!-- 1 Permission -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="prompt">
+          <div class="glyph">📁</div>
+          <h3>Allow access to files</h3>
+          <p>File Reader needs permission to read the files and folders on your device. Nothing is
+          uploaded or changed.</p>
+          <button class="btn">Grant access</button>
+          <button class="btn ghost">Not now</button>
+        </div>
+      </div></div>
+      <p class="caption"><span class="n">1</span><b>Permission request</b>
+        <span class="sub">First launch only, if not already granted.</span></p>
+    </div>
+
+    <!-- 2 Denied -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">File Reader</span></div>
+        <div class="prompt">
+          <div class="glyph dim">🔒</div>
+          <h3>Access not granted</h3>
+          <p>Grant storage access to browse your files. You can enable it anytime from here or in
+          system settings.</p>
+          <button class="btn">Grant access</button>
+        </div>
+      </div></div>
+      <p class="caption"><span class="n">2</span><b>Permission denied / empty state</b>
+        <span class="sub">Fallback when access is refused — not a blank list.</span></p>
+    </div>
+
+    <!-- 3 Explorer -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">Internal storage</span><span class="act">⌕</span><span class="act">⋮</span></div>
+        <div class="crumb">/storage/emulated/0</div>
+        <div class="body">
+          <div class="row folder"><span class="ic">📂</span><span class="nm">Download</span><span class="mt">24 items</span></div>
+          <div class="row folder"><span class="ic">📂</span><span class="nm">Documents</span><span class="mt">11 items</span></div>
+          <div class="row folder"><span class="ic">📂</span><span class="nm">DCIM</span><span class="mt">3 items</span></div>
+          <div class="row"><span class="ic">📄</span><span class="nm">notes.txt</span><span class="mt">2 KB</span></div>
+          <div class="row"><span class="ic">📝</span><span class="nm">README.md</span><span class="mt">6 KB</span></div>
+          <div class="row"><span class="ic">🧾</span><span class="nm">config.json</span><span class="mt">1 KB</span></div>
+          <div class="row"><span class="ic">📊</span><span class="nm">budget.csv</span><span class="mt">9 KB</span></div>
+          <div class="row"><span class="ic">🌐</span><span class="nm">index.html</span><span class="mt">4 KB</span></div>
+          <div class="row dim"><span class="ic">📦</span><span class="nm">archive.zip</span><span class="mt">unsupported</span></div>
+        </div>
+      </div></div>
+      <p class="caption"><span class="n">3</span><b>Explorer (home)</b>
+        <span class="sub">Storage root on first run; last-viewed folder after. Tap folder → in; tap file → below.</span></p>
+    </div>
+
+    <!-- 4 Unsupported modal -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">Internal storage</span><span class="act">⌕</span><span class="act">⋮</span></div>
+        <div class="crumb">/storage/emulated/0</div>
+        <div class="body">
+          <div class="row folder"><span class="ic">📂</span><span class="nm">Download</span><span class="mt">24 items</span></div>
+          <div class="row"><span class="ic">📄</span><span class="nm">notes.txt</span><span class="mt">2 KB</span></div>
+          <div class="row dim"><span class="ic">📦</span><span class="nm">archive.zip</span><span class="mt">9 MB</span></div>
+        </div>
+        <div class="overlay"><div class="sheet">
+          <div class="grip"></div>
+          <h3>Can't open this file <span class="ext">.zip</span></h3>
+          <p><b>archive.zip</b> — this format isn't supported yet. Support for more formats arrives in
+          later phases.</p>
+          <button class="btn">Got it</button>
+        </div></div>
+      </div></div>
+      <p class="caption"><span class="n">4</span><b>Unsupported-file modal</b>
+        <span class="sub">Overlay on the explorer. Dismiss → stays put, no viewer pushed.</span></p>
+    </div>
+
+  </div>
+
+  <p class="flow-note">// VIEWERS — 5 screens, one shared scaffold (← back · title · content)</p>
+  <div class="grid">
+
+    <!-- 5 Text -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="back">←</span><span class="title">notes.txt</span>
+          <div class="seg"><span class="on">WRAP</span><span>MONO</span></div></div>
+        <div class="body"><div class="mono">Build notes — 2026-10-18
+
+- explorer is the home surface
+- tap folder -> navigate in
+- tap file -> push viewer
+- back -> return to explorer
+
+TODO: confirm last-viewed
+persistence on cold start.
+
+[12:04] deploy ok
+[12:19] rollback test passed
+[13:02] <span class="c">warning: low disk</span></div></div>
+      </div></div>
+      <p class="caption"><span class="n">5</span><b>Text / log viewer</b>
+        <span class="sub">.txt .log — monospace + wrap toggle, streamed for big files.</span></p>
+    </div>
+
+    <!-- 6 Markdown -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="back">←</span><span class="title">README.md</span>
+          <div class="seg"><span class="on">VIEW</span><span>RAW</span></div></div>
+        <div class="body"><div class="md">
+          <h2>File Reader</h2>
+          <p>An Android-first <b>file explorer</b> that opens files to read.</p>
+          <h3>How it works</h3>
+          <ul><li>Browse from the storage root</li><li>Tap a file to read it</li><li>Back returns to the explorer</li></ul>
+          <p>Run with <code>flutter run</code>.</p>
+        </div></div>
+      </div></div>
+      <p class="caption"><span class="n">6</span><b>Markdown viewer</b>
+        <span class="sub">.md — rendered, with a raw-source toggle.</span></p>
+    </div>
+
+    <!-- 7 JSON/XML -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="back">←</span><span class="title">config.json</span>
+          <div class="seg"><span class="on">TREE</span><span>RAW</span></div></div>
+        <div class="body"><div class="mono">{
+  <span class="k">"app"</span>: <span class="s">"file-reader"</span>,
+  <span class="k">"version"</span>: <span class="s">"1.0.0"</span>,
+  <span class="k">"phase"</span>: <span class="k">1</span>,
+  <span class="k">"formats"</span>: [
+    <span class="s">"txt"</span>, <span class="s">"md"</span>,
+    <span class="s">"json"</span>, <span class="s">"xml"</span>,
+    <span class="s">"csv"</span>, <span class="s">"html"</span>
+  ],
+  <span class="k">"android"</span>: {
+    <span class="k">"minSdk"</span>: <span class="k">24</span>
+  }
+}</div></div>
+      </div></div>
+      <p class="caption"><span class="n">7</span><b>JSON / XML viewer</b>
+        <span class="sub">.json .xml — pretty-print + syntax highlight (safe parse, no XXE).</span></p>
+    </div>
+
+    <!-- 8 CSV -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="back">←</span><span class="title">budget.csv</span><span class="act">⇅</span></div>
+        <div class="body" style="padding:8px; overflow:hidden;">
+          <table class="csv">
+            <tr><th>Month</th><th>Plan</th><th>Actual</th></tr>
+            <tr><td>Jan</td><td>1,200</td><td>1,180</td></tr>
+            <tr><td>Feb</td><td>1,200</td><td>1,240</td></tr>
+            <tr><td>Mar</td><td>1,350</td><td>1,300</td></tr>
+            <tr><td>Apr</td><td>1,350</td><td>1,410</td></tr>
+            <tr><td>May</td><td>1,400</td><td>1,390</td></tr>
+            <tr><td>Jun</td><td>1,400</td><td>1,455</td></tr>
+          </table>
+        </div>
+      </div></div>
+      <p class="caption"><span class="n">8</span><b>CSV viewer</b>
+        <span class="sub">.csv — scrollable table, raw fallback on malformed rows.</span></p>
+    </div>
+
+    <!-- 9 HTML -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="back">←</span><span class="title">index.html</span>
+          <div class="seg"><span class="on">VIEW</span><span>RAW</span></div></div>
+        <div class="body"><div class="htmlr">
+          <h2>Welcome</h2>
+          <p>This page renders in a read-only preview.</p>
+          <p>See the <a>documentation</a> for details.</p>
+          <div class="box">Rendered preview · scripts disabled · no network</div>
+        </div></div>
+      </div></div>
+      <p class="caption"><span class="n">9</span><b>HTML viewer</b>
+        <span class="sub">.html — rendered preview (scripts off) + raw toggle.</span></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  FILE-READER / PHASE-1 / 9 SCREENS — 4 explorer/entry + 5 viewers (shared scaffold)
+  <div class="legend">
+    <span><span class="dot" style="background:var(--accent)"></span> focal / primary action</span>
+    <span><span class="dot" style="background:var(--muted)"></span> supported file</span>
+    <span><span class="dot" style="background:var(--soft)"></span> unsupported / disabled</span>
+  </div>
+</footer>
+</body>
+</html>
