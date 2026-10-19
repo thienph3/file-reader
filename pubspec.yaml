@@ -59,6 +59,9 @@ dependencies:
   epubx: 4.0.0
   flutter_svg: 2.3.0
 
+  # xlsx grid viewer (official Flutter 2D scroll table)
+  two_dimensional_scrollables: 0.5.5
+
   # UI/UX polish (see delivery/.../ui-ux-polish/decisions.md)
   dynamic_color: 1.9.0
   flutter_animate: 4.5.2

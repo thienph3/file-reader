@@ -44,3 +44,51 @@ List<List<String>> extractXlsxTable(
     return const <List<String>>[];
   }
 }
+
+/// One worksheet of a workbook: its [name] and its [rows] of string cells.
+class XlsxSheet {
+  const XlsxSheet({required this.name, required this.rows});
+  final String name;
+  final List<List<String>> rows;
+}
+
+/// Extracts **all** sheets of an `.xlsx` as [XlsxSheet]s, in workbook order.
+///
+/// Safe by contract: never throws. Malformed/empty/oversized input → `[]`.
+/// Cells are stringified (null → ''); values are display-only.
+List<XlsxSheet> extractXlsxWorkbook(
+  List<int> bytes, {
+  int maxBytes = kMaxDocBytes,
+}) {
+  if (bytes.isEmpty || bytes.length > maxBytes) return const <XlsxSheet>[];
+  try {
+    final decoder = SpreadsheetDecoder.decodeBytes(bytes);
+    final out = <XlsxSheet>[];
+    for (final entry in decoder.tables.entries) {
+      out.add(XlsxSheet(
+        name: entry.key,
+        rows: entry.value.rows
+            .map((row) => row.map((c) => c?.toString() ?? '').toList())
+            .toList(),
+      ));
+    }
+    return out;
+  } catch (_) {
+    return const <XlsxSheet>[];
+  }
+}
+
+/// Spreadsheet column label for a 0-based column index: 0→A, 25→Z, 26→AA,
+/// 27→AB, … (bijective base-26, like Excel). Pure.
+String columnLabel(int index) {
+  if (index < 0) return '';
+  var i = index;
+  final buf = StringBuffer();
+  while (true) {
+    final rem = i % 26;
+    buf.write(String.fromCharCode(65 + rem));
+    i = i ~/ 26 - 1;
+    if (i < 0) break;
+  }
+  return String.fromCharCodes(buf.toString().codeUnits.reversed);
+}
