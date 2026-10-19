@@ -75,8 +75,8 @@ Deliverables: image viewer with pinch-zoom/pan, animated GIF playback, EXIF meta
 | Office | `.docx`, `.xlsx`, `.pptx` |
 
 Deliverables: PDF viewer (page navigation, pinch-zoom) via a native renderer. Office formats are
-read-only **content extraction** (no local-only fidelity renderer exists): `.docx` → text, `.xlsx` →
-first-sheet table, `.pptx` → per-slide text (added in Phase 6 — not rendered slides).
+read-only **content extraction** (no local-only fidelity renderer exists): `.docx` → structured view (headings, bold/italic, **text colour**, font size, highlighting, alignment, lists, tables, inline images) with a plain-text toggle, `.xlsx` →
+a multi-sheet read-only grid (sheet tabs, A/B/C & 1/2/3 headers, zoom-to-read), `.pptx` → per-slide styled content (text, colour, emphasis, size, inline images; not positioned slide layout).
 
 ### Phase 4 — Media & Archives
 | Category | Extensions |
@@ -187,8 +187,7 @@ CSV, HTML) are implemented and reviewed.
 
 **Phase 3 — complete.** Documents: a real **PDF viewer** (`pdfx` — native rendering, page
 navigation, pinch-zoom, graceful error state). Office formats are **read-only content extraction**,
-not fidelity rendering: `.docx` → extracted text, `.xlsx` → first-sheet table, `.pptx` → per-slide
-text (added in Phase 6). No on-device slide/office *renderer* exists, so these read content, not layout.
+not fidelity rendering: `.docx` → structured formatting (headings, emphasis, lists, tables, inline images; exact page layout may differ) + plain-text fallback, `.xlsx` → read-only multi-sheet Excel-style grid, `.pptx` → per-slide styled content (text/colour/emphasis/size/images). No on-device slide/office *renderer* exists, so these read content, not layout.
 
 **Phase 4 — complete.** Media & archives: an **audio player** (`just_audio` — play/pause, seek bar)
 for `.mp3 .m4a .wav .ogg`; a **video player** (`video_player` — play/pause, scrubber) for
@@ -201,9 +200,11 @@ browser now previews image pages in memory), **SVG** vector images (`flutter_svg
 config/source-code long tail (`.yaml .toml .ini`, `.dart .py .js .go .rs .sql .css`, … → text
 viewer), and `.rtf` (extracted to text).
 
-**Phase 6 — complete.** `.pptx` now opens as a **per-slide text outline** (each slide's text,
-extracted from the OpenXML via the existing `archive` + `xml` — no new dependency, no slide
-rendering). `flutter analyze` is clean and 109 unit/widget tests pass.
+**Phase 6 — complete.** `.pptx` now opens as **per-slide styled content** (each slide's text with
+colour, emphasis, size, and inline images, extracted from the OpenXML via the existing `archive` +
+`xml` and rendered with `flutter_widget_from_html_core` — no new dependency; content per slide, not
+positioned slide layout). A plain-text toggle remains. `flutter analyze` is clean and the suite is
+green.
 
 Deliberately deferred / scoped: **rich Markdown rendering** and **`.cbr`** (RAR) remain deferred for
 dependency availability (`.md` stays plain text; no maintainable pub-get-able unrar — see
