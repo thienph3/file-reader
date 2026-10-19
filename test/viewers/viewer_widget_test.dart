@@ -20,8 +20,12 @@ void main() {
     )));
     await tester.pumpAndSettle();
     expect(find.textContaining('hello world'), findsOneWidget);
-    expect(find.text('WRAP'), findsOneWidget);
     expect(find.text('notes.txt'), findsOneWidget);
+    // Wrap is now a toggle inside the shared overflow (Options) menu.
+    expect(find.byTooltip('Options'), findsOneWidget);
+    await tester.tap(find.byTooltip('Options'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wrap lines'), findsOneWidget);
   });
 
   testWidgets('StructuredViewer pretty-prints JSON and toggles to raw',

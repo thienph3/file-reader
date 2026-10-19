@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../core/file_ref.dart';
+import '../viewer_common.dart';
 import '../viewer_scaffold.dart';
 
 /// Video player: play/pause + a progress bar, via `video_player`. Shows a
@@ -58,9 +59,11 @@ class _VideoViewerState extends State<VideoViewer> {
     return ViewerScaffold(
       title: widget.file.name,
       child: _errored
-          ? const _MediaError(kind: 'video')
+          ? const ViewerError(
+              title: "Can't play this video",
+              hint: 'The format may not be supported on this device.')
           : !_ready
-              ? const Center(child: CircularProgressIndicator())
+              ? const ViewerLoading()
               : Column(
                   children: <Widget>[
                     Expanded(
@@ -71,49 +74,20 @@ class _VideoViewerState extends State<VideoViewer> {
                         ),
                       ),
                     ),
-                    VideoProgressIndicator(_controller, allowScrubbing: true),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: ValueListenableBuilder<VideoPlayerValue>(
-                        valueListenable: _controller,
-                        builder: (context, value, _) => IconButton.filled(
-                          iconSize: 40,
-                          icon: Icon(value.isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow),
-                          onPressed: () => value.isPlaying
-                              ? _controller.pause()
-                              : _controller.play(),
-                        ),
+                    ValueListenableBuilder<VideoPlayerValue>(
+                      valueListenable: _controller,
+                      builder: (context, value, _) => TransportBar(
+                        playing: value.isPlaying,
+                        position: value.position,
+                        duration: value.duration,
+                        onPlayPause: () => value.isPlaying
+                            ? _controller.pause()
+                            : _controller.play(),
+                        onSeek: _controller.seekTo,
                       ),
                     ),
                   ],
                 ),
-    );
-  }
-}
-
-class _MediaError extends StatelessWidget {
-  const _MediaError({required this.kind});
-  final String kind;
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(Icons.error_outline, size: 48),
-            const SizedBox(height: 12),
-            Text("Can't play this $kind",
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            const Text('The format may not be supported on this device.',
-                textAlign: TextAlign.center),
-          ],
-        ),
-      ),
     );
   }
 }

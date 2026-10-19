@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/file_ref.dart';
+import '../viewer_common.dart';
 import '../viewer_scaffold.dart';
 import 'office_extract.dart';
 
@@ -47,22 +48,28 @@ class _DocxViewerState extends State<DocxViewer> {
         future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const ViewerLoading();
           }
           final text = snap.data ?? '';
           if (text.trim().isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text("No readable text — this document may be empty "
-                    'or use unsupported content.'),
-              ),
+            return const ViewerEmpty(
+              icon: Icons.description_outlined,
+              title: 'No readable text',
+              hint: 'This document may be empty or use unsupported content.',
             );
           }
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: SelectableText(text,
-                style: const TextStyle(fontSize: 14, height: 1.5)),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const ExtractionBadge(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: SelectableText(text,
+                      style: const TextStyle(fontSize: 14, height: 1.5)),
+                ),
+              ),
+            ],
           );
         },
       ),

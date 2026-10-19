@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/file_ref.dart';
+import '../viewer_common.dart';
 import '../viewer_scaffold.dart';
 import 'office_extract.dart';
 
@@ -51,11 +52,14 @@ class _XlsxViewerState extends State<XlsxViewer> {
         future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const ViewerLoading();
           }
           final all = snap.data ?? const <List<String>>[];
           if (all.isEmpty) {
-            return const Center(child: Text('Empty or unreadable spreadsheet.'));
+            return const ViewerEmpty(
+              icon: Icons.table_chart_outlined,
+              title: 'Empty or unreadable spreadsheet.',
+            );
           }
           final header = all.first;
           final allData = all.skip(1).toList();
@@ -67,6 +71,7 @@ class _XlsxViewerState extends State<XlsxViewer> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              const ExtractionBadge(label: 'First sheet, cell values only'),
               if (capped)
                 Container(
                   width: double.infinity,

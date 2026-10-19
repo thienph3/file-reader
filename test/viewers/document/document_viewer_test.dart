@@ -3,6 +3,7 @@ import 'package:file_reader/core/file_type.dart';
 import 'package:file_reader/viewers/document/docx_viewer.dart';
 import 'package:file_reader/viewers/document/xlsx_viewer.dart';
 import 'package:file_reader/viewers/registry.dart';
+import 'package:file_reader/viewers/viewer_common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -20,6 +21,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('letter.docx'), findsOneWidget);
     expect(find.textContaining('Dear team'), findsOneWidget);
+    // Consistent extraction badge tells the user it's text, not rendered layout.
+    expect(find.byType(ExtractionBadge), findsOneWidget);
   });
 
   testWidgets('DocxViewer shows a message when there is no text',

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/file_ref.dart';
+import '../viewer_common.dart';
 import '../viewer_scaffold.dart';
 import 'pptx_extract.dart';
 
@@ -49,44 +50,51 @@ class _PptxViewerState extends State<PptxViewer> {
         future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const ViewerLoading();
           }
           final slides = snap.data ?? const <PptxSlide>[];
           if (slides.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text("Can't read this presentation — it may be empty "
-                    'or use an unsupported structure.'),
-              ),
+            return const ViewerEmpty(
+              icon: Icons.slideshow_outlined,
+              title: "Can't read this presentation",
+              hint: 'It may be empty or use an unsupported structure.',
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: slides.length,
-            separatorBuilder: (_, _) => const Divider(height: 32),
-            itemBuilder: (context, i) {
-              final s = slides[i];
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('Slide ${s.index}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelMedium
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  if (s.texts.isEmpty)
-                    Text('(no text)',
-                        style: TextStyle(
-                            color: Theme.of(context).disabledColor,
-                            fontStyle: FontStyle.italic))
-                  else
-                    SelectableText(s.texts.join('\n'),
-                        style: const TextStyle(fontSize: 14, height: 1.5)),
-                ],
-              );
-            },
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const ExtractionBadge(label: 'Slide text only — slides not rendered'),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: slides.length,
+                  separatorBuilder: (_, _) => const Divider(height: 32),
+                  itemBuilder: (context, i) {
+                    final s = slides[i];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('Slide ${s.index}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 6),
+                        if (s.texts.isEmpty)
+                          Text('(no text)',
+                              style: TextStyle(
+                                  color: Theme.of(context).disabledColor,
+                                  fontStyle: FontStyle.italic))
+                        else
+                          SelectableText(s.texts.join('\n'),
+                              style:
+                                  const TextStyle(fontSize: 14, height: 1.5)),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),

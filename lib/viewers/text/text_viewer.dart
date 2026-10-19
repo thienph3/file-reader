@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/file_ref.dart';
 import '../file_loader.dart';
+import '../viewer_common.dart';
 import '../viewer_scaffold.dart';
 
 /// Plain-text / log viewer. Also handles `.md` in Phase 1 (rich Markdown is
@@ -38,21 +39,22 @@ class _TextViewerState extends State<TextViewer> {
     return ViewerScaffold(
       title: widget.file.name,
       actions: <Widget>[
-        ViewerToggle(
-          left: 'WRAP',
-          right: 'NOWRAP',
-          leftSelected: _wrap,
-          onChanged: (v) => setState(() => _wrap = v),
-        ),
+        ViewerMenu(toggles: <ViewerMenuToggle>[
+          ViewerMenuToggle(
+            label: 'Wrap lines',
+            value: _wrap,
+            onChanged: (v) => setState(() => _wrap = v),
+          ),
+        ]),
       ],
       child: FutureBuilder<LoadedText>(
         future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const ViewerLoading();
           }
           if (snap.hasError) {
-            return _ErrorBody(message: 'Could not open file.');
+            return const ViewerError(title: 'Could not open file.');
           }
           final loaded = snap.data!;
           return Column(
@@ -99,12 +101,4 @@ class _TruncatedBanner extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ErrorBody extends StatelessWidget {
-  const _ErrorBody({required this.message});
-  final String message;
-  @override
-  Widget build(BuildContext context) =>
-      Center(child: Text(message, style: const TextStyle(color: Colors.red)));
 }

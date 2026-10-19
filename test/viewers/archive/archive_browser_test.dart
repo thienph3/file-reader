@@ -60,9 +60,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('readme.txt'));
     await tester.pumpAndSettle();
-    // Inner text viewer shows the decoded content + wrap toggle.
+    // Inner text viewer shows the decoded content (with the shared overflow menu).
     expect(find.textContaining('hello inside zip'), findsOneWidget);
-    expect(find.text('WRAP'), findsOneWidget);
+    expect(find.byTooltip('Options'), findsOneWidget);
   });
 
   testWidgets('tapping a non-previewable inner file shows the unsupported modal',

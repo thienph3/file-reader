@@ -106,10 +106,24 @@ are **deferred** (dependency availability — see `.../phase5/decisions.md`); `.
   - File access / picker, storage permissions
   - Markdown rendering, syntax highlighting
   - Image/EXIF, PDF rendering, media playback, archive handling
+- **UI/theming:** Material 3 with **Material You** dynamic colour (`dynamic_color`, falling back to a
+  tangerine seed), light + dark (`themeMode: system`), the bundled **Inter** typeface, subtle
+  motion (`flutter_animate`), and shimmer skeleton loading (`shimmer`).
+- **Consistent viewer chrome:** every viewer shares one scaffold (app bar · back · title), shared
+  loading / empty / error states, a shared **overflow menu** for secondary toggles (e.g. wrap), and
+  a shared bottom **transport bar** used by both the audio and video players. Content-extraction
+  viewers (`.docx .xlsx .pptx .rtf`) show a small "text only — original layout not shown" badge so
+  the behaviour reads as by-design, not as a rendering failure.
 - **Min Android SDK / target SDK:** pinned in Phase 1 research
 
 > Dependency versions are deliberately **not** guessed here. Each phase's research task verifies the
 > current, stable, 7-day-aged versions and records them in `docs/tech.md` before any code is written.
+
+### Fonts & licenses
+
+The **Inter** typeface is bundled under the **SIL Open Font License 1.1** (`assets/fonts/OFL.txt`) —
+free to embed, including commercially. It is bundled (not fetched at runtime), so the app makes no
+network request for fonts.
 
 ## Getting Started
 
