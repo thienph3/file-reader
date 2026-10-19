@@ -24,7 +24,15 @@ class ViewerScaffold extends StatelessWidget {
         title: Text(title, overflow: TextOverflow.ellipsis),
         actions: actions,
       ),
-      body: child,
+      // Inset only the bottom so viewer footers (seek bars, chapter nav, EXIF
+      // panel, …) clear the Android system navigation bar. The app bar already
+      // handles the top; horizontal edges need no inset on normal devices.
+      body: SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        child: child,
+      ),
     );
   }
 }
