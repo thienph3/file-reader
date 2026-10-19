@@ -1,9 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Phase 1: read-only access to open local files the user selects.
-         Scoped media perms (Android 13+) + legacy read for older APIs.
-         Deliberately NOT requesting MANAGE_EXTERNAL_STORAGE (All-Files-Access):
-         a read-only viewer uses scoped reads + the Storage Access Framework,
-         per plan.md Permissions ("minimise broad permissions"). -->
+    <!-- A general-purpose file explorer must read ALL file types the user owns,
+         not just media. On Android 13+ the scoped READ_MEDIA_* grants expose
+         media only, which hid PDFs/EPUBs/docs/zips from the listing. All-Files-
+         Access is therefore required for the app's core purpose — accepted as a
+         documented risk (see .kiro/issues/2026-10-19-explorer-missing-nonmedia-files).
+         Requires a Google Play "All files access" policy declaration at submit. -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <!-- Legacy + scoped media reads for older APIs / fallback. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
