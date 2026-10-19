@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:file_reader/core/file_ref.dart';
 import 'package:file_reader/core/file_type.dart';
 import 'package:file_reader/core/viewer_registry.dart';
 import 'package:file_reader/explorer/directory_lister.dart';
 import 'package:file_reader/explorer/explorer_screen.dart';
+import 'package:file_reader/explorer/explorer_skeleton.dart';
 import 'package:file_reader/explorer/last_dir_store.dart';
 import 'package:file_reader/explorer/view_mode.dart';
 import 'package:file_reader/viewers/registry.dart';
@@ -165,5 +168,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('visible.txt'), findsOneWidget);
     expect(find.text('.hidden'), findsNothing); // hidden by default
+  });
+
+  testWidgets('shows a shimmer skeleton while the folder is still loading',
+      (tester) async {
+    // A lister that never completes keeps the FutureBuilder in the waiting
+    // state so the skeleton (not a spinner) is shown.
+    Future<List<Entry>> pendingLister(String path) =>
+        Completer<List<Entry>>().future;
+    await tester.pumpWidget(MaterialApp(
+      home: ExplorerScreen(
+        initialPath: root,
+        rootPath: root,
+        registry: buildPhase1Registry(),
+        store: _MemStore(),
+        prefsStore: _FakePrefsStore(),
+        lister: pendingLister,
+      ),
+    ));
+    await tester.pump(); // one frame; do NOT settle (future is pending)
+    expect(find.byType(ExplorerSkeleton), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

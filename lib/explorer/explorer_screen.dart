@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../core/file_ref.dart';
 import '../core/viewer_registry.dart';
 import 'directory_lister.dart';
 import 'entry_visuals.dart';
+import 'explorer_skeleton.dart';
 import 'explorer_sort.dart';
 import 'file_tap_action.dart';
 import 'last_dir_store.dart';
@@ -150,10 +152,14 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
           future: _entries,
           builder: (context, snap) {
             if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
+              return const ExplorerSkeleton();
             }
             if (snap.hasError) {
-              return const Center(child: Text('Could not read this folder.'));
+              return const _ExplorerMessage(
+                icon: Icons.error_outline,
+                title: 'Could not read this folder',
+                hint: 'It may be unavailable or permission was revoked.',
+              );
             }
             final ordered = applyView(
               snap.data!,
@@ -163,9 +169,16 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
               showHidden: _prefs.showHidden,
             );
             if (ordered.isEmpty) {
-              return const Center(child: Text('Empty folder'));
+              return const _ExplorerMessage(
+                icon: Icons.folder_open_outlined,
+                title: 'Empty folder',
+                hint: 'Nothing to show here.',
+              );
             }
-            return _buildBody(ordered);
+            return _buildBody(ordered)
+                .animate()
+                .fadeIn(duration: 180.ms)
+                .slideY(begin: 0.01, end: 0, duration: 180.ms);
           },
         ),
       ),
@@ -313,6 +326,48 @@ class _GridBody extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Centered icon + title + hint for the explorer's empty / error states.
+class _ExplorerMessage extends StatelessWidget {
+  const _ExplorerMessage({
+    required this.icon,
+    required this.title,
+    required this.hint,
+  });
+
+  final IconData icon;
+  final String title;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(icon, size: 52, color: scheme.onSurfaceVariant),
+            const SizedBox(height: 16),
+            Text(title,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            Text(hint,
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant)),
+          ],
+        ),
+      ).animate().fadeIn(duration: 200.ms),
     );
   }
 }

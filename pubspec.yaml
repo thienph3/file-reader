@@ -59,6 +59,11 @@ dependencies:
   epubx: 4.0.0
   flutter_svg: 2.3.0
 
+  # UI/UX polish (see delivery/.../ui-ux-polish/decisions.md)
+  dynamic_color: 1.9.0
+  flutter_animate: 4.5.2
+  shimmer: 3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -80,6 +85,22 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Bundled Inter (SIL OFL 1.1 — see assets/fonts/OFL.txt). Variable TTF; the
+  # weight range maps FontWeight.* onto the font's wght axis.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
+          weight: 400
+        - asset: assets/fonts/Inter.ttf
+          weight: 500
+        - asset: assets/fonts/Inter.ttf
+          weight: 600
+        - asset: assets/fonts/Inter.ttf
+          weight: 700
+  assets:
+    - assets/fonts/OFL.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:
