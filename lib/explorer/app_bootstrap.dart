@@ -7,22 +7,28 @@ import '../core/viewer_registry.dart';
 import 'explorer_screen.dart';
 import 'last_dir_store.dart';
 import 'prefs_last_dir_store.dart';
+import 'view_mode.dart';
 
 /// Abstraction over the storage-permission request, injectable for tests.
 typedef RequestStorage = Future<bool> Function();
 
 Future<bool> _defaultRequestStorage() async {
-  // Narrowest-permission: request scoped read only. On Android 13+ the relevant
-  // grants are the READ_MEDIA_* group; on API <=32 it is READ_EXTERNAL_STORAGE.
-  // We do NOT request MANAGE_EXTERNAL_STORAGE (All-Files-Access) — a read-only
-  // viewer uses scoped reads + SAF (plan.md Permissions).
+  // A file explorer must read ALL file types, not just media. On Android 13+
+  // scoped READ_MEDIA_* exposes media only, hiding PDFs/EPUBs/docs/zips — so we
+  // request All-Files-Access (MANAGE_EXTERNAL_STORAGE) as the primary grant.
+  // Accepted-risk decision (the app's whole purpose is browsing every file) —
+  // see .kiro/issues/2026-10-19-explorer-missing-nonmedia-files.
+  final manage = await Permission.manageExternalStorage.request();
+  if (manage.isGranted) return true;
+
+  // Fallback for older APIs / if the user declines All-Files-Access: scoped
+  // reads still let the explorer show media + folders (degraded, not empty).
   final results = await <Permission>[
     Permission.photos,
     Permission.videos,
     Permission.audio,
     Permission.storage,
   ].request();
-  // Granted if any scoped read was allowed (platforms expose different subsets).
   return results.values.any((s) => s.isGranted || s.isLimited);
 }
 
@@ -44,14 +50,17 @@ class AppBootstrap extends StatefulWidget {
     super.key,
     ViewerRegistry? registry,
     LastDirStore? store,
+    ExplorerPrefsStore? prefsStore,
     this.requestStorage = _defaultRequestStorage,
     String? storageRoot,
   })  : registry = registry ?? _mustProvideRegistry(),
         store = store ?? PrefsLastDirStore(),
+        prefsStore = prefsStore ?? PrefsExplorerPrefsStore(),
         storageRoot = storageRoot ?? defaultStorageRoot();
 
   final ViewerRegistry registry;
   final LastDirStore store;
+  final ExplorerPrefsStore prefsStore;
   final RequestStorage requestStorage;
   final String storageRoot;
 
@@ -102,6 +111,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
           rootPath: widget.storageRoot,
           registry: widget.registry,
           store: widget.store,
+          prefsStore: widget.prefsStore,
         );
       },
     );

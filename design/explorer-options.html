@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Reader — Explorer View Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f5f5f5; --card:#ffffff; --ink:#2d3142; --muted:#4f5d75;
+    --soft:#7a8399; --rule:rgba(45,49,66,0.12); --accent:#eb6c36;
+    --accent-tint:#fdece4; --chip:#eef0f3;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Geist',sans-serif; line-height:1.5;}
+  header.page{max-width:1240px; margin:0 auto; padding:2.5rem 2rem 1rem;}
+  .eyebrow{font-family:'Geist Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem;}
+  h1{font-family:'Instrument Serif',serif; font-weight:400; font-size:2.4rem; margin:0 0 .5rem;}
+  .lede{color:var(--muted); max-width:64ch; margin:0;}
+  .flow{max-width:1240px; margin:1rem auto 0; padding:0 2rem 3rem;}
+  .flow-note{font-family:'Geist Mono',monospace; font-size:11px; color:var(--soft); letter-spacing:.04em; margin:1.75rem 0 .5rem;}
+  .grid{display:flex; flex-wrap:wrap; gap:2rem; align-items:flex-start;}
+  .phone{width:256px; background:var(--card); border:1px solid var(--rule); border-radius:22px; padding:8px; flex:0 0 auto;}
+  .screen{position:relative; height:512px; border-radius:15px; overflow:hidden; background:var(--paper); border:1px solid var(--rule); display:flex; flex-direction:column;}
+  .caption{margin:.65rem 2px 0; font-size:12px;}
+  .caption b{font-weight:600;}
+  .caption .n{font-family:'Geist Mono',monospace; font-size:10px; color:var(--accent); border:1px solid var(--accent); border-radius:4px; padding:0 4px; margin-right:6px;}
+  .caption .sub{display:block; color:var(--soft); font-size:11px; margin-top:2px;}
+  .status{height:20px; display:flex; align-items:center; justify-content:space-between; padding:0 10px; font-family:'Geist Mono',monospace; font-size:8px; color:var(--soft); flex:0 0 auto;}
+  .appbar{height:46px; flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:0 10px; background:var(--card); border-bottom:1px solid var(--rule);}
+  .appbar .title{font-size:13px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .appbar .act{font-size:15px; color:var(--muted); width:20px; text-align:center;}
+  .appbar .act.on{color:var(--accent);}
+  .crumb{font-family:'Geist Mono',monospace; font-size:9px; color:var(--soft); padding:5px 10px; background:var(--card); border-bottom:1px solid var(--rule); flex:0 0 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .body{flex:1 1 auto; overflow:hidden;}
+  /* LIST */
+  .row{display:flex; align-items:center; gap:10px; padding:9px 11px; border-bottom:1px solid var(--rule); background:var(--card);}
+  .row .ic{width:20px; text-align:center; font-size:14px;}
+  .row .nm{font-size:12px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .row .mt{font-family:'Geist Mono',monospace; font-size:8px; color:var(--soft);}
+  .folder .nm{font-weight:600;}
+  /* DETAIL (two-line) */
+  .drow{display:flex; align-items:center; gap:11px; padding:8px 11px; border-bottom:1px solid var(--rule); background:var(--card);}
+  .drow .thumb{width:34px; height:34px; border-radius:6px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-size:15px; background:var(--chip); overflow:hidden;}
+  .drow .meta{flex:1; min-width:0;}
+  .drow .nm{font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .drow .sub{font-family:'Geist Mono',monospace; font-size:8px; color:var(--soft); margin-top:1px;}
+  /* GRID */
+  .gwrap{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px;}
+  .gwrap.large{grid-template-columns:repeat(2,1fr); gap:10px;}
+  .tile{background:var(--card); border:1px solid var(--rule); border-radius:8px; padding:8px; display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .tile .ph{width:100%; aspect-ratio:1; border-radius:6px; background:var(--chip); display:flex; align-items:center; justify-content:center; font-size:22px; overflow:hidden;}
+  .tile.large .ph{font-size:30px;}
+  .tile .nm{font-size:10px; text-align:center; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  /* fake image fills */
+  .img1{background:linear-gradient(135deg,#f6b26b,#e06666);} 
+  .img2{background:linear-gradient(135deg,#6fa8dc,#3d85c6);} 
+  .img3{background:linear-gradient(135deg,#93c47d,#38761d);} 
+  .img4{background:linear-gradient(135deg,#c27ba0,#741b47);} 
+  /* options sheet */
+  .overlay{position:absolute; inset:0; background:rgba(45,49,66,0.45); display:flex; align-items:flex-end;}
+  .sheet{background:var(--card); width:100%; border-radius:16px 16px 0 0; padding:14px 16px 20px; display:flex; flex-direction:column; gap:2px;}
+  .sheet .grip{width:34px; height:4px; border-radius:2px; background:var(--rule); align-self:center; margin-bottom:8px;}
+  .sheet h4{margin:10px 0 4px; font-family:'Geist Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--soft);}
+  .opt{display:flex; align-items:center; gap:10px; padding:8px 4px; font-size:13px; border-radius:6px;}
+  .opt .k{width:18px; text-align:center;}
+  .opt.sel{color:var(--accent); font-weight:600;}
+  .opt .r{margin-left:auto; font-family:'Geist Mono',monospace; font-size:9px; color:var(--soft);}
+  .seg{display:flex; gap:6px; margin:4px 0 2px;}
+  .seg .s{flex:1; text-align:center; font-size:11px; padding:7px 0; border:1px solid var(--rule); border-radius:8px; color:var(--muted);}
+  .seg .s.on{background:var(--accent-tint); border-color:var(--accent); color:var(--accent); font-weight:600;}
+  .toggle{display:flex; align-items:center; padding:9px 4px; font-size:13px; border-top:1px solid var(--rule); margin-top:6px;}
+  .sw{margin-left:auto; width:34px; height:18px; border-radius:10px; background:var(--accent); position:relative;}
+  .sw::after{content:''; position:absolute; right:2px; top:2px; width:14px; height:14px; border-radius:50%; background:#fff;}
+  .sw.off{background:var(--rule);} .sw.off::after{left:2px; right:auto;}
+  footer.page{max-width:1240px; margin:0 auto; padding:1.5rem 2rem 3rem; border-top:1px solid var(--rule); color:var(--soft); font-family:'Geist Mono',monospace; font-size:10px;}
+</style>
+</head>
+<body>
+<header class="page">
+  <p class="eyebrow">File Reader · Explorer · View options</p>
+  <h1>View Modes &amp; Options</h1>
+  <p class="lede">Proposed explorer controls: four view modes (list / detail / grid / large grid),
+  a sort+filter sheet, a show-hidden toggle, and image thumbnails where decodable. App-bar icons
+  toggle the view mode (▤) and open the options sheet (⇅). These are static mockups to agree on the
+  design before implementation — not final visuals.</p>
+</header>
+
+<div class="flow">
+
+  <p class="flow-note">// VIEW MODES — 4</p>
+  <div class="grid">
+
+    <!-- 1 LIST -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">Internal storage</span><span class="act">⌕</span><span class="act on">▤</span><span class="act">⇅</span></div>
+        <div class="crumb">/storage/emulated/0</div>
+        <div class="body">
+          <div class="row folder"><span class="ic">📂</span><span class="nm">Download</span><span class="mt">24</span></div>
+          <div class="row folder"><span class="ic">📂</span><span class="nm">Documents</span><span class="mt">11</span></div>
+          <div class="row"><span class="ic">🖼️</span><span class="nm">beach.jpg</span><span class="mt">2 MB</span></div>
+          <div class="row"><span class="ic">📄</span><span class="nm">report.pdf</span><span class="mt">840 KB</span></div>
+          <div class="row"><span class="ic">📚</span><span class="nm">novel.epub</span><span class="mt">1.2 MB</span></div>
+          <div class="row"><span class="ic">🧾</span><span class="nm">data.json</span><span class="mt">4 KB</span></div>
+          <div class="row"><span class="ic">📊</span><span class="nm">budget.csv</span><span class="mt">9 KB</span></div>
+        </div>
+      </div></div>
+      <p class="caption"><span class="n">1</span><b>List</b><span class="sub">Compact rows — icon + name + size. The default, densest.</span></p>
+    </div>
+
+    <!-- 2 DETAIL -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">Internal storage</span><span class="act">⌕</span><span class="act on">☰</span><span class="act">⇅</span></div>
+        <div class="crumb">/storage/emulated/0</div>
+        <div class="body">
+          <div class="drow folder"><span class="thumb">📂</span><span class="meta"><div class="nm">Download</div><div class="sub">24 items · Oct 18</div></span></div>
+          <div class="drow"><span class="thumb img1"></span><span class="meta"><div class="nm">beach.jpg</div><div class="sub">JPEG · 2.0 MB · Oct 17</div></span></div>
+          <div class="drow"><span class="thumb">📄</span><span class="meta"><div class="nm">report.pdf</div><div class="sub">PDF · 840 KB · Oct 15</div></span></div>
+          <div class="drow"><span class="thumb">📚</span><span class="meta"><div class="nm">novel.epub</div><div class="sub">EPUB · 1.2 MB · Oct 10</div></span></div>
+          <div class="drow"><span class="thumb img2"></span><span class="meta"><div class="nm">chart.png</div><div class="sub">PNG · 320 KB · Oct 09</div></span></div>
+        </div>
+      </div></div>
+      <p class="caption"><span class="n">2</span><b>Detail</b><span class="sub">Two-line rows — name + type · size · date, with a thumbnail where decodable.</span></p>
+    </div>
+
+    <!-- 3 GRID -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">DCIM</span><span class="act">⌕</span><span class="act on">▦</span><span class="act">⇅</span></div>
+        <div class="crumb">/storage/emulated/0/DCIM</div>
+        <div class="body"><div class="gwrap">
+          <div class="tile"><div class="ph">📂</div><div class="nm">Camera</div></div>
+          <div class="tile"><div class="ph img1"></div><div class="nm">beach.jpg</div></div>
+          <div class="tile"><div class="ph img2"></div><div class="nm">sky.png</div></div>
+          <div class="tile"><div class="ph img3"></div><div class="nm">hike.webp</div></div>
+          <div class="tile"><div class="ph img4"></div><div class="nm">cat.gif</div></div>
+          <div class="tile"><div class="ph">📄</div><div class="nm">notes.pdf</div></div>
+        </div></div>
+      </div></div>
+      <p class="caption"><span class="n">3</span><b>Grid</b><span class="sub">3-column tiles — thumbnails for images, type icons otherwise.</span></p>
+    </div>
+
+    <!-- 4 LARGE GRID -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">DCIM</span><span class="act">⌕</span><span class="act on">⬛</span><span class="act">⇅</span></div>
+        <div class="crumb">/storage/emulated/0/DCIM</div>
+        <div class="body"><div class="gwrap large">
+          <div class="tile large"><div class="ph img1"></div><div class="nm">beach.jpg</div></div>
+          <div class="tile large"><div class="ph img2"></div><div class="nm">sky.png</div></div>
+          <div class="tile large"><div class="ph img3"></div><div class="nm">hike.webp</div></div>
+          <div class="tile large"><div class="ph img4"></div><div class="nm">cat.gif</div></div>
+        </div></div>
+      </div></div>
+      <p class="caption"><span class="n">4</span><b>Large grid (gallery)</b><span class="sub">2-column big previews — best for photo/manga folders.</span></p>
+    </div>
+
+  </div>
+
+  <p class="flow-note">// CONTROLS — options sheet (sort · filter · toggles)</p>
+  <div class="grid">
+
+    <!-- 5 OPTIONS SHEET -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">Internal storage</span><span class="act">⌕</span><span class="act">▤</span><span class="act on">⇅</span></div>
+        <div class="crumb">/storage/emulated/0</div>
+        <div class="body" style="opacity:.4;">
+          <div class="row folder"><span class="ic">📂</span><span class="nm">Download</span><span class="mt">24</span></div>
+          <div class="row"><span class="ic">🖼️</span><span class="nm">beach.jpg</span><span class="mt">2 MB</span></div>
+          <div class="row"><span class="ic">📄</span><span class="nm">report.pdf</span><span class="mt">840 KB</span></div>
+        </div>
+        <div class="overlay"><div class="sheet">
+          <div class="grip"></div>
+          <h4>View mode</h4>
+          <div class="seg"><span class="s">List</span><span class="s">Detail</span><span class="s on">Grid</span><span class="s">Large</span></div>
+          <h4>Sort by</h4>
+          <div class="opt sel"><span class="k">🔤</span>Name<span class="r">A→Z ▲</span></div>
+          <div class="opt"><span class="k">📏</span>Size<span class="r"></span></div>
+          <div class="opt"><span class="k">🕑</span>Date modified<span class="r"></span></div>
+          <div class="opt"><span class="k">🏷️</span>Type<span class="r"></span></div>
+          <div class="toggle">Folders first<span class="sw"></span></div>
+          <div class="toggle">Show hidden files<span class="sw off"></span></div>
+        </div></div>
+      </div></div>
+      <p class="caption"><span class="n">5</span><b>Options sheet</b><span class="sub">View mode + sort field + direction, folders-first &amp; show-hidden toggles. Choices persist.</span></p>
+    </div>
+
+    <!-- 6 SORT DIRECTION / ACTIVE STATE -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>▮▮▮ ▯</span></div>
+        <div class="appbar"><span class="title">Documents</span><span class="act">⌕</span><span class="act">☰</span><span class="act on">⇅</span></div>
+        <div class="crumb">/storage/emulated/0/Documents</div>
+        <div class="body" style="opacity:.4;">
+          <div class="row"><span class="ic">📄</span><span class="nm">a.pdf</span><span class="mt">9 MB</span></div>
+          <div class="row"><span class="ic">📄</span><span class="nm">b.pdf</span><span class="mt">4 MB</span></div>
+        </div>
+        <div class="overlay"><div class="sheet">
+          <div class="grip"></div>
+          <h4>Sort by</h4>
+          <div class="opt"><span class="k">🔤</span>Name<span class="r"></span></div>
+          <div class="opt sel"><span class="k">📏</span>Size<span class="r">Largest ▼</span></div>
+          <div class="opt"><span class="k">🕑</span>Date modified<span class="r"></span></div>
+          <div class="opt"><span class="k">🏷️</span>Type<span class="r"></span></div>
+          <h4>Filter</h4>
+          <div class="opt sel"><span class="k">∗</span>All files<span class="r">●</span></div>
+          <div class="opt"><span class="k">🖼️</span>Images only<span class="r"></span></div>
+          <div class="opt"><span class="k">📄</span>Documents only<span class="r"></span></div>
+        </div></div>
+      </div></div>
+      <p class="caption"><span class="n">6</span><b>Sort direction + filter</b><span class="sub">Tapping a selected sort flips asc/desc. Optional category filter (All / Images / Documents …).</span></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  FILE-READER / EXPLORER OPTIONS — 4 view modes + sort (name/size/date/type, asc·desc) + folders-first + show-hidden + image thumbnails. Search &amp; category filter shown dimmed = candidate for a later pass.
+</footer>
+</body>
+</html>

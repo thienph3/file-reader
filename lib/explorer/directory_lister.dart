@@ -5,32 +5,43 @@ import '../core/file_type.dart';
 
 /// A single row in the explorer: either a directory or a file.
 class Entry {
-  const Entry.directory(this.name, this.path)
+  Entry.directory(this.name, this.path, {this.modified})
       : isDirectory = true,
+        size = null,
         fileRef = null;
-  Entry.file(FileRef ref)
+  Entry.file(FileRef ref, {this.modified})
       : isDirectory = false,
         name = ref.name,
         path = ref.path,
+        size = ref.size,
         fileRef = ref;
 
   final bool isDirectory;
   final String name;
   final String path;
 
+  /// File size in bytes; null for directories.
+  final int? size;
+
+  /// Last-modified time if known; used by date sorting + the detail view.
+  final DateTime? modified;
+
   /// Populated for files only; carries the detected [FileType].
   final FileRef? fileRef;
+
+  /// True if this is a hidden entry (dotfile), e.g. `.gitignore`.
+  bool get isHidden => name.startsWith('.');
 }
 
-/// Lists [dirPath], returning directories first (both alphabetical).
+/// Lists [dirPath] as a flat list of [Entry] (unsorted — ordering/visibility is
+/// applied by `explorer_sort.dart` so the user's sort/filter prefs decide it).
 ///
 /// Detection is extension-based here (no byte reads during listing — fast, and
 /// avoids opening every file). Entries that can't be stat'd are skipped rather
 /// than throwing, so one bad entry doesn't break the whole listing.
 Future<List<Entry>> listDirectory(String dirPath) async {
   final dir = Directory(dirPath);
-  final dirs = <Entry>[];
-  final files = <Entry>[];
+  final entries = <Entry>[];
 
   await for (final entity in dir.list(followLinks: false)) {
     try {
@@ -38,23 +49,24 @@ Future<List<Entry>> listDirectory(String dirPath) async {
           .where((s) => s.isNotEmpty)
           .lastOrNull ??
           entity.path;
+      final stat = await entity.stat();
       if (entity is Directory) {
-        dirs.add(Entry.directory(name, entity.path));
+        entries.add(Entry.directory(name, entity.path,
+            modified: stat.modified));
       } else if (entity is File) {
-        final stat = await entity.stat();
-        files.add(Entry.file(FileRef(
-          path: entity.path,
-          name: name,
-          type: detectFileType(name),
-          size: stat.size,
-        )));
+        entries.add(Entry.file(
+          FileRef(
+            path: entity.path,
+            name: name,
+            type: detectFileType(name),
+            size: stat.size,
+          ),
+          modified: stat.modified,
+        ));
       }
     } catch (_) {
       // Skip unreadable entries.
     }
   }
-
-  dirs.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-  files.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-  return <Entry>[...dirs, ...files];
+  return entries;
 }

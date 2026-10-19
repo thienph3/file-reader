@@ -15,13 +15,22 @@ apps.
 
 ## How it works
 
-The explorer is the home screen. On first launch it asks for storage access (if needed) and shows
-your files from the storage root; on later launches it reopens the folder you were last viewing.
+The explorer is the home screen. On first launch it asks for **All-Files-Access** (so it can show
+*every* file type, not just media — a general file explorer needs this; Android 13+ scoped media
+permissions hide PDFs/EPUBs/docs) and shows your files from the storage root; on later launches it
+reopens the folder you were last viewing.
 Tapping a folder jumps into it. Tapping a file whose format is supported pushes a viewer for it — the
 system back button (or the viewer's back arrow) returns you to the explorer right where you left off.
 Tapping a file whose format isn't supported yet shows a brief "unsupported" dialog and leaves you in
 the explorer. Opening a file from another app ("open with") jumps straight to the viewer, and backing
 out drops you into the explorer — so the explorer is always one tap away.
+
+**View options.** The explorer offers four layouts — **list**, **detail** (name + type · size ·
+date), **grid**, and **large grid** (gallery) — plus **sorting** by name / size / date / type
+(ascending or descending), a **folders-first** toggle, and a **show-hidden-files** toggle. Images get
+real thumbnails (`.jpg .jpeg .png .gif .webp .bmp`, lazily decoded and size-capped); other files show
+a type icon. All choices persist across launches. (Category filter and in-folder search are planned
+for a later pass.) See `design/explorer-options.html` for the mockup.
 
 ## Scope
 
@@ -130,7 +139,7 @@ on-device verification, and troubleshooting).
 lib/
   main.dart
   app/            # app shell (MaterialApp, theme)
-  explorer/       # home surface: browse, permissions, navigation, last-dir, unsupported modal
+  explorer/       # home surface: browse, view modes + sort/options, thumbnails, permissions, nav
   viewers/
     text/         # Phase 1: text/log, JSON/XML, CSV, HTML (+ Phase 5: config/source, .rtf)
     image/        # Phase 2: image viewer (zoom/pan, GIF, EXIF) (+ Phase 5: .svg)
@@ -141,7 +150,7 @@ lib/
   core/           # file-type detection, FileRef, viewer registry
 test/             # unit + widget tests mirroring lib/
 docs/             # tech.md (verified, pinned APIs)
-design/           # screens.html — Phase 1 screen mockups
+design/           # screens.html (Phase 1) + explorer-options.html (view modes)
 ```
 
 ## Delivery Plan

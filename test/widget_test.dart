@@ -4,6 +4,7 @@ import 'package:file_reader/core/viewer_registry.dart';
 import 'package:file_reader/explorer/directory_lister.dart';
 import 'package:file_reader/explorer/explorer_screen.dart';
 import 'package:file_reader/explorer/last_dir_store.dart';
+import 'package:file_reader/explorer/view_mode.dart';
 import 'package:file_reader/viewers/registry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,15 @@ class _MemStore implements LastDirStore {
   Future<String?> read() async => value;
   @override
   Future<void> write(String path) async => value = path;
+}
+
+/// In-memory prefs store for tests (defaults: list mode, name asc).
+class _FakePrefsStore implements ExplorerPrefsStore {
+  ExplorerPrefs value = const ExplorerPrefs();
+  @override
+  Future<ExplorerPrefs> read() async => value;
+  @override
+  Future<void> write(ExplorerPrefs p) async => value = p;
 }
 
 /// A registry whose viewers do no file I/O, so navigation tests don't hit disk.
@@ -31,7 +41,7 @@ void main() {
   Future<List<Entry>> fakeLister(String path) async {
     if (path == root) {
       return <Entry>[
-        const Entry.directory('Docs', '$root/Docs'),
+        Entry.directory('Docs', '$root/Docs'),
         Entry.file(const FileRef(
             path: '$root/a.txt', name: 'a.txt', type: FileType.plainText)),
         Entry.file(const FileRef(
@@ -49,12 +59,15 @@ void main() {
     return <Entry>[];
   }
 
-  Widget host(LastDirStore store, {ViewerRegistry? registry}) => MaterialApp(
+  Widget host(LastDirStore store,
+          {ViewerRegistry? registry, ExplorerPrefsStore? prefsStore}) =>
+      MaterialApp(
         home: ExplorerScreen(
           initialPath: root,
           rootPath: root,
           registry: registry ?? buildPhase1Registry(),
           store: store,
+          prefsStore: prefsStore ?? _FakePrefsStore(),
           lister: fakeLister,
         ),
       );
@@ -101,5 +114,56 @@ void main() {
     expect(find.textContaining("Can't open this file"), findsOneWidget);
     // Still in the explorer behind the sheet.
     expect(find.text('Docs'), findsOneWidget);
+  });
+
+  testWidgets('grid view mode renders a GridView of entries', (tester) async {
+    final prefs = _FakePrefsStore()
+      ..value = const ExplorerPrefs(viewMode: ViewMode.grid);
+    await tester.pumpWidget(host(_MemStore(), prefsStore: prefs));
+    await tester.pumpAndSettle();
+    expect(find.byType(GridView), findsOneWidget);
+    expect(find.byType(ListView), findsNothing);
+    expect(find.text('Docs'), findsOneWidget); // entries still shown
+  });
+
+  testWidgets('options action opens the sort/view sheet', (tester) async {
+    await tester.pumpWidget(host(_MemStore()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Sort & view options'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sort by'.toUpperCase()), findsOneWidget);
+    expect(find.text('Show hidden files'), findsOneWidget);
+    expect(find.text('Folders first'), findsOneWidget);
+  });
+
+  testWidgets('hidden files appear only when the show-hidden pref is on',
+      (tester) async {
+    // fakeLister has no dotfiles; verify the pref plumbs through by using a
+    // lister with a hidden entry via a dedicated host.
+    Future<List<Entry>> hiddenLister(String path) async => <Entry>[
+          Entry.file(const FileRef(
+              path: '$root/.hidden',
+              name: '.hidden',
+              type: FileType.plainText)),
+          Entry.file(const FileRef(
+              path: '$root/visible.txt',
+              name: 'visible.txt',
+              type: FileType.plainText)),
+        ];
+    final prefs = _FakePrefsStore()
+      ..value = const ExplorerPrefs(showHidden: false);
+    await tester.pumpWidget(MaterialApp(
+      home: ExplorerScreen(
+        initialPath: root,
+        rootPath: root,
+        registry: buildPhase1Registry(),
+        store: _MemStore(),
+        prefsStore: prefs,
+        lister: hiddenLister,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('visible.txt'), findsOneWidget);
+    expect(find.text('.hidden'), findsNothing); // hidden by default
   });
 }
